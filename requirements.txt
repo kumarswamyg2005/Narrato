@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+markitdown[all]
+edge-tts
+spacy
+pydub
+boto3
+supabase
+python-dotenv
+aiofiles
