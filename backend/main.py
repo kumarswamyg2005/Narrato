@@ -742,3 +742,29 @@ async def get_chapter_text(chapter_id: str):
     # SQLite/Supabase returns dict-like Row with 'raw_text'
     return {"text": chapter.get("raw_text") or ""}
 
+
+# Serve static frontend files in production if built
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/dist"))
+if os.path.exists(FRONTEND_DIR):
+    from fastapi.responses import FileResponse
+    
+    # Mount assets folder
+    assets_dir = os.path.join(FRONTEND_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
+        
+    # Catch-all to serve frontend index.html (SPA routing)
+    @app.get("/{catchall:path}")
+    async def serve_frontend(catchall: str):
+        # Avoid intercepting API or media requests
+        if catchall.startswith("api") or catchall.startswith("static"):
+            raise HTTPException(status_code=404)
+        
+        # If requesting specific files from frontend root (e.g. favicon.svg)
+        file_path = os.path.join(FRONTEND_DIR, catchall)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+
